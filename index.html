@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tides Africa Safaris - Interactive Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-[#0F2211] text-[#E8E2D9] antialiased"
+      x-data="{
+          step: 0,
+          duration: null,
+          experiences: [],
+          accommodation: null,
+          submitted: false,
+          form: { name: '', email: '', countryCode: '+1', whatsapp: '', travelDate: '' },
+          
+          durations: [
+              { id: 3,  label: '3 Days',  sublabel: 'Weekend Escape',    icon: '⏱️' },
+              { id: 5,  label: '5 Days',  sublabel: 'Classic Safari',    icon: '🧭' },
+              { id: 7,  label: '7 Days',  sublabel: 'Deep Immersion',    icon: '🌿' },
+              { id: 10, label: '10+ Days',sublabel: 'Grand Expedition',  icon: '⭐' }
+          ],
+          
+          allExperiences: [
+              { id: 'gorilla',    label: 'Gorilla Trekking',       sublabel: 'Bwindi Impenetrable Forest',          icon: '🦍', addOn: 800,  tag: 'Most Sought After' },
+              { id: 'chimp',      label: 'Chimpanzee Tracking',    sublabel: 'Kibale National Park',                icon: '🐒', addOn: 250,  tag: null },
+              { id: 'gamedrives', label: 'Game Drives',            sublabel: 'Queen Elizabeth & Murchison Falls',   icon: '🌅', addOn: 150,  tag: null },
+              { id: 'boat',       label: 'Boat Cruises',           sublabel: 'Nile & Kazinga Channel',              icon: '⛵', addOn: 0,    tag: null },
+              { id: 'cultural',   label: 'Cultural Tours',         sublabel: 'Authentic Village Encounters',        icon: '🎭', addOn: 0,    tag: null }
+          ],
+          
+          accommodations: [
+              { id: 'luxury',   label: 'Luxury Lodges',        sublabel: 'Private plunge pools · Butler service',  perDay: 600, tag: 'Most Popular' },
+              { id: 'midrange', label: 'Mid-Range Comfort',    sublabel: 'Ensuite tented camps · Full board',      perDay: 350, tag: null },
+              { id: 'budget',   label: 'Shoestring / Budget',  sublabel: 'Shared facilities · Self-catering',     perDay: 180, tag: null }
+          ],
+          
+          toggleExp(id) {
+              if (this.experiences.includes(id)) {
+                  this.experiences = this.experiences.filter(x => x !== id);
+              } else {
+                  this.experiences.push(id);
+              }
+          },
+          
+          calcBudget() {
+              if (!this.duration || !this.accommodation) return null;
+              let accom = this.accommodations.find(a => a.id === this.accommodation);
+              let days = this.duration === 10 ? 12 : this.duration;
+              let base = accom ? accom.perDay * days : 0;
+              let addOns = this.experiences.reduce((sum, id) => {
+                  let exp = this.allExperiences.find(e => e.id === id);
+                  return sum + (exp ? exp.addOn : 0);
+              }, 0);
+              let total = base + addOns;
+              return {
+                  low: Math.round(total * 0.92 / 100) * 100,
+                  high: Math.round(total * 1.18 / 100) * 100
+              };
+          }
+      }">
+
+    <div class="min-h-screen max-w-5xl mx-auto px-4 py-10 font-sans">
+        
+        <div class="text-center mb-10">
+            <h1 class="text-white font-extrabold text-3xl md:text-5xl mb-2">
+                Build Your Bespoke <span class="text-[#C9A84C]">Uganda Safari</span>
+            </h1>
+            <p class="text-gray-400 text-sm max-w-md mx-auto">
+                Select your options to calculate your live indicative investment range.
+            </p>
+        </div>
+
+        <template x-if="!submitted">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div class="md:col-span-3 bg-[#1A3A1C]/80 border border-[#243D26] rounded-2xl p-6">
+                    
+                    <div x-show="step === 0">
+                        <h2 class="text-white font-bold text-xl mb-4">How long is your journey?</h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <template x-for="d in durations">
+                                <button @click="duration = d.id"
+                                    :class="duration === d.id ? 'bg-[#C9A84C]/10 border-[#C9A84C]' : 'bg-[#243D26]/40 border-[#243D26]'"
+                                    class="p-4 rounded-xl text-left border transition">
+                                    <span class="text-xl mb-1 block" x-text="d.icon"></span>
+                                    <p class="font-bold text-white" x-text="d.label"></p>
+                                    <p class="text-xs text-gray-400" x-text="d.sublabel"></p>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div x-show="step === 1">
+                        <h2 class="text-white font-bold text-xl mb-4">Craft your experiences</h2>
+                        <div class="space-y-2">
+                            <template x-for="e in allExperiences">
+                                <button @click="toggleExp(e.id)"
+                                    :class="experiences.includes(e.id) ? 'bg-[#C9A84C]/10 border-[#C9A84C]' : 'bg-[#243D26]/40 border-[#243D26]'"
+                                    class="w-full flex items-center gap-3 p-3 rounded-xl text-left border transition">
+                                    <span class="text-2xl" x-text="e.icon"></span>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-white text-sm" x-text="e.label"></p>
+                                        <p class="text-xs text-gray-400" x-text="e.sublabel"></p>
+                                    </div>
+                                    <span class="text-xs text-[#C9A84C] font-bold" x-text="e.addOn > 0 ? '+$' + e.addOn : 'Incl.'"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div x-show="step === 2">
+                        <h2 class="text-white font-bold text-xl mb-4">Choose your sanctuary</h2>
+                        <div class="space-y-2">
+                            <template x-for="a in accommodations">
+                                <button @click="accommodation = a.id"
+                                    :class="accommodation === a.id ? 'bg-[#C9A84C]/10 border-[#C9A84C]' : 'bg-[#243D26]/40 border-[#243D26]'"
+                                    class="w-full flex items-center gap-3 p-4 rounded-xl text-left border transition">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-white text-sm" x-text="a.label"></p>
+                                        <p class="text-xs text-gray-400" x-text="a.sublabel"></p>
+                                    </div>
+                                    <span class="text-xs text-[#C9A84C] font-bold" x-text="'$' + a.perDay + '/day'"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div x-show="step === 3">
+                        <h2 class="text-white font-bold text-xl mb-4">Reserve your consultation</h2>
+                        <form @submit.prevent="submitted = true" class="space-y-3 text-black">
+                            <input type="text" placeholder="Full Name" required x-model="form.name" class="w-full p-2.5 rounded bg-white" />
+                            <input type="email" placeholder="Email Address" required x-model="form.email" class="w-full p-2.5 rounded bg-white" />
+                            <input type="tel" placeholder="WhatsApp Line" required x-model="form.whatsapp" class="w-full p-2.5 rounded bg-white" />
+                            <input type="month" required x-model="form.travelDate" class="w-full p-2.5 rounded bg-white" />
+                            <button type="submit" class="w-full py-3 bg-[#C9A84C] text-[#0F2211] font-bold rounded-xl uppercase tracking-wider text-xs mt-2">
+                                Get My Custom Itinerary
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-6 pt-4 border-t border-[#243D26]">
+                        <button x-show="step > 0" @click="step--" class="text-gray-400 text-sm">
+                            ← Back
+                        </button>
+                        <div x-show="step === 0"></div> <button x-show="step < 3" 
+                                :disabled="(step === 0 && !duration) || (step === 1 && experiences.length === 0) || (step === 2 && !accommodation)"
+                                @click="step++" 
+                                class="px-4 py-2 bg-[#C9A84C] text-[#0F2211] font-bold rounded-lg text-sm disabled:opacity-40">
+                            Next Step →
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="md:col-span-2 bg-[#1A3A1C] border border-[#243D26] rounded-2xl p-5 self-start">
+                    <h3 class="text-[#C9A84C] text-xs font-bold uppercase tracking-widest mb-3">Live Estimate</h3>
+                    <div x-show="calcBudget()" x-data="{ budget: null }" x-effect="budget = calcBudget()">
+                        <p class="text-white font-extrabold text-2xl" x-text="'$' + budget?.low.toLocaleString() + ' — $' + budget?.high.toLocaleString()"></p>
+                        <p class="text-xs text-gray-400 mt-1">USD · Per Person</p>
+                    </div>
+                    <div x-show="!calcBudget()">
+                        <p class="text-xs text-gray-400">Complete selections to generate estimate.</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="submitted">
+            <div class="max-w-md mx-auto bg-[#1A3A1C] border border-[#243D26] rounded-2xl p-6 text-center">
+                <span class="text-3xl block mb-2">🎉</span>
+                <h2 class="text-white font-bold text-xl mb-2">Your Journey Begins!</h2>
+                <p class="text-sm text-gray-400">Thank you, <span class="text-white" x-text="form.name"></span>. Our concierge team will reach out via WhatsApp shortly.</p>
+            </div>
+        </template>
+
+    </div>
+</body>
+</html>
