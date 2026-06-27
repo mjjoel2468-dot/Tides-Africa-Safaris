@@ -63,7 +63,6 @@
           loading: false,
           errorMessage: '',
           
-          // Currency Exchange Multipliers relative to USD Base Matrix
           exchangeRates: {
               USD: { rate: 1, symbol: '$', suffix: ' USD' },
               UGX: { rate: 3675, symbol: 'USh ', suffix: ' UGX' },
@@ -71,7 +70,6 @@
               GBP: { rate: 0.79, symbol: '£', suffix: ' GBP' }
           },
 
-          // Budget estimation matrix base rates (USD values)
           baseRates: { luxury: 450, midrange: 250, budget: 150 },
           activityCosts: {
               'gorilla': 800, 
@@ -80,7 +78,6 @@
               'boat_cruise': 50
           },
 
-          // Helper method to apply conversion rates and format strings correctly
           formatConvertedValue(usdAmount) {
               const current = this.exchangeRates[this.activeCurrency];
               const convertedValue = Math.round(usdAmount * current.rate);
@@ -118,7 +115,6 @@
 
               const activityLabels = this.selectedActivities.map(a => a.replace('_', ' ').toUpperCase()).join(', ') || 'General Sightseeing';
               
-              // Calculate explicit text outputs for processing channels
               const finalBudgetStr = this.formatConvertedValue(this.calculateEstimate());
               const finalAccomodationStr = this.formatConvertedValue(this.calculateAccommodationTotal());
               const finalActivitiesStr = this.formatConvertedValue(this.calculateActivitiesTotal());
@@ -137,22 +133,19 @@
                   custom_notes: this.booking.notes.trim() || 'None'
               };
 
-              // 1. EmailJS Pipeline
               try {
                   if (EMAILJS_SERVICE_ID !== 'YOUR_EMAILJS_SERVICE_ID' && EMAILJS_SERVICE_ID !== '') {
                       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
                   } else {
                       await new Promise(r => setTimeout(r, 800));
-                      console.info('[Tides Africa] EmailJS route skipped — Parameters:', templateParams);
                   }
               } catch (err) {
-                  console.error('[Tides Africa] EmailJS execution failed:', err);
+                  console.error('[Tides Africa] EmailJS failure:', err);
                   this.errorMessage = 'Submission failed. Please try again or reach out on WhatsApp.';
                   this.loading = false;
                   return;
               }
 
-              // 2. WhatsApp API Integration String
               const waText = [
                   '🦁 *New Safari Inquiry - Tides Africa* 🌊',
                   '',
@@ -188,7 +181,7 @@
                 </div>
             </div>
 
-            <!-- Global Currency Selection Toggles -->
+            <!-- Global Currency Toggles -->
             <div class="flex items-center gap-1 bg-[#111A13] border border-[#162018] p-1 rounded-xl">
                 <template x-for="curr in ['USD', 'UGX', 'EUR', 'GBP']">
                     <button type="button" @click="activeCurrency = curr"
@@ -238,57 +231,87 @@
                     </div>
                 </div>
 
-                <!-- Step 2: Activity Matrix -->
+                <!-- Step 2: Experience Checklist with High-End Safari Visuals -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6">
                     <h3 class="heading font-bold text-white text-sm uppercase tracking-wider text-[#D4A373] mb-4">2. Experience Checklist</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        
+                        <!-- Gorilla Tracking Card -->
                         <button type="button" @click="toggleActivity('gorilla')"
-                                :class="selectedActivities.includes('gorilla') ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
-                                class="p-4 rounded-xl border text-left transition-all flex items-start gap-3">
-                            <div class="mt-0.5 rounded border border-gray-600 h-4 w-4 flex items-center justify-center flex-shrink-0" :class="selectedActivities.includes('gorilla') && 'bg-[#D4A373] border-transparent'">
-                                <span x-show="selectedActivities.includes('gorilla')" class="text-xs text-[#090D0A] font-bold">✓</span>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold text-white">Gorilla Trekking Permit</p>
-                                <p class="text-[11px] font-mono text-[#D4A373] mt-0.5 font-medium" x-text="'+ ' + formatConvertedValue(800)"></p>
+                                :class="selectedActivities.includes('gorilla') ? 'border-[#D4A373] ring-1 ring-[#D4A373]' : 'border-[#162018] bg-[#090D0A]'"
+                                class="rounded-xl border overflow-hidden text-left transition-all relative group flex flex-col h-48">
+                            <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80" alt="Gorilla Tracking Bwindi" class="w-full h-28 object-cover object-top filter brightness-90 group-hover:scale-105 transition duration-500"/>
+                            <div class="p-3 bg-[#090D0A] flex-grow flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-bold text-white">Gorilla Trekking</p>
+                                        <div class="h-3 w-3 rounded-full border border-gray-600 flex items-center justify-center" :class="selectedActivities.includes('gorilla') && 'bg-[#D4A373] border-transparent'">
+                                            <span x-show="selectedActivities.includes('gorilla')" class="text-[9px] text-[#090D0A] font-bold">✓</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Bwindi Impenetrable Forest Primates.</p>
+                                </div>
+                                <p class="text-[11px] font-mono text-[#D4A373] font-medium mt-1" x-text="'+ ' + formatConvertedValue(800)"></p>
                             </div>
                         </button>
 
+                        <!-- Savannah Game Drive Card -->
                         <button type="button" @click="toggleActivity('game_drive')"
-                                :class="selectedActivities.includes('game_drive') ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
-                                class="p-4 rounded-xl border text-left transition-all flex items-start gap-3">
-                            <div class="mt-0.5 rounded border border-gray-600 h-4 w-4 flex items-center justify-center flex-shrink-0" :class="selectedActivities.includes('game_drive') && 'bg-[#D4A373] border-transparent'">
-                                <span x-show="selectedActivities.includes('game_drive')" class="text-xs text-[#090D0A] font-bold">✓</span>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold text-white">Savannah Game Drives</p>
-                                <p class="text-[11px] font-mono text-[#D4A373] mt-0.5 font-medium" x-text="'+ ' + formatConvertedValue(75)"></p>
+                                :class="selectedActivities.includes('game_drive') ? 'border-[#D4A373] ring-1 ring-[#D4A373]' : 'border-[#162018] bg-[#090D0A]'"
+                                class="rounded-xl border overflow-hidden text-left transition-all relative group flex flex-col h-48">
+                            <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=600&q=80" alt="Savannah Game Drive" class="w-full h-28 object-cover filter brightness-90 group-hover:scale-105 transition duration-500"/>
+                            <div class="p-3 bg-[#090D0A] flex-grow flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-bold text-white">Savannah Game Drives</p>
+                                        <div class="h-3 w-3 rounded-full border border-gray-600 flex items-center justify-center" :class="selectedActivities.includes('game_drive') && 'bg-[#D4A373] border-transparent'">
+                                            <span x-show="selectedActivities.includes('game_drive')" class="text-[9px] text-[#090D0A] font-bold">✓</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Queen Elizabeth & Murchison Falls Safaris.</p>
+                                </div>
+                                <p class="text-[11px] font-mono text-[#D4A373] font-medium mt-1" x-text="'+ ' + formatConvertedValue(75)"></p>
                             </div>
                         </button>
 
+                        <!-- Chimpanzee Tracking Card -->
                         <button type="button" @click="toggleActivity('chimp')"
-                                :class="selectedActivities.includes('chimp') ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
-                                class="p-4 rounded-xl border text-left transition-all flex items-start gap-3">
-                            <div class="mt-0.5 rounded border border-gray-600 h-4 w-4 flex items-center justify-center flex-shrink-0" :class="selectedActivities.includes('chimp') && 'bg-[#D4A373] border-transparent'">
-                                <span x-show="selectedActivities.includes('chimp')" class="text-xs text-[#090D0A] font-bold">✓</span>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold text-white">Chimpanzee Tracking</p>
-                                <p class="text-[11px] font-mono text-[#D4A373] mt-0.5 font-medium" x-text="'+ ' + formatConvertedValue(250)"></p>
+                                :class="selectedActivities.includes('chimp') ? 'border-[#D4A373] ring-1 ring-[#D4A373]' : 'border-[#162018] bg-[#090D0A]'"
+                                class="rounded-xl border overflow-hidden text-left transition-all relative group flex flex-col h-48">
+                            <img src="https://images.unsplash.com/photo-1456926631375-92c8ce872def?auto=format&fit=crop&w=600&q=80" alt="Chimpanzee Tracking Kibale" class="w-full h-28 object-cover filter brightness-90 group-hover:scale-105 transition duration-500"/>
+                            <div class="p-3 bg-[#090D0A] flex-grow flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-bold text-white">Chimpanzee Tracking</p>
+                                        <div class="h-3 w-3 rounded-full border border-gray-600 flex items-center justify-center" :class="selectedActivities.includes('chimp') && 'bg-[#D4A373] border-transparent'">
+                                            <span x-show="selectedActivities.includes('chimp')" class="text-[9px] text-[#090D0A] font-bold">✓</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Kibale Forest Jungle Paths.</p>
+                                </div>
+                                <p class="text-[11px] font-mono text-[#D4A373] font-medium mt-1" x-text="'+ ' + formatConvertedValue(250)"></p>
                             </div>
                         </button>
 
+                        <!-- Kazinga Channel Boat Cruise Card -->
                         <button type="button" @click="toggleActivity('boat_cruise')"
-                                :class="selectedActivities.includes('boat_cruise') ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
-                                class="p-4 rounded-xl border text-left transition-all flex items-start gap-3">
-                            <div class="mt-0.5 rounded border border-gray-600 h-4 w-4 flex items-center justify-center flex-shrink-0" :class="selectedActivities.includes('boat_cruise') && 'bg-[#D4A373] border-transparent'">
-                                <span x-show="selectedActivities.includes('boat_cruise')" class="text-xs text-[#090D0A] font-bold">✓</span>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold text-white">Kazinga Channel Cruise</p>
-                                <p class="text-[11px] font-mono text-[#D4A373] mt-0.5 font-medium" x-text="'+ ' + formatConvertedValue(50)"></p>
+                                :class="selectedActivities.includes('boat_cruise') ? 'border-[#D4A373] ring-1 ring-[#D4A373]' : 'border-[#162018] bg-[#090D0A]'"
+                                class="rounded-xl border overflow-hidden text-left transition-all relative group flex flex-col h-48">
+                            <img src="https://images.unsplash.com/photo-1601999109332-542b18dbec57?auto=format&fit=crop&w=600&q=80" alt="Kazinga Channel Aquatic Cruise" class="w-full h-28 object-cover filter brightness-90 group-hover:scale-105 transition duration-500"/>
+                            <div class="p-3 bg-[#090D0A] flex-grow flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-bold text-white">Kazinga Channel Cruise</p>
+                                        <div class="h-3 w-3 rounded-full border border-gray-600 flex items-center justify-center" :class="selectedActivities.includes('boat_cruise') && 'bg-[#D4A373] border-transparent'">
+                                            <span x-show="selectedActivities.includes('boat_cruise')" class="text-[9px] text-[#090D0A] font-bold">✓</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Aquatic Stream Wildlife Framing.</p>
+                                </div>
+                                <p class="text-[11px] font-mono text-[#D4A373] font-medium mt-1" x-text="'+ ' + formatConvertedValue(50)"></p>
                             </div>
                         </button>
+
                     </div>
                 </div>
 
@@ -323,7 +346,7 @@
 
             <!-- SYNOPSIS AND LEAD CAPTURE SIDEBAR -->
             <div class="space-y-6">
-                <!-- Live Value Matrix Indicator with Detailed Breakdown -->
+                <!-- Live Value Matrix Indicator -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6 relative overflow-hidden">
                     <div class="absolute top-0 right-0 bg-[#D4A373]/10 text-[#D4A373] text-[9px] tracking-widest uppercase font-bold px-3 py-1 rounded-bl-lg">
                         Estimation
@@ -335,7 +358,6 @@
                         <div class="flex justify-between"><span class="text-gray-500">Duration Range</span><span class="text-white font-mono" x-text="duration + ' Days'"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Lodge Profile</span><span class="text-white uppercase font-mono" x-text="tier"></span></div>
                         
-                        <!-- Multi-Currency Dynamic Breakdown Items -->
                         <div class="flex justify-between border-t border-[#162018]/40 pt-2">
                             <span class="text-gray-400">Lodging Subtotal:</span>
                             <span class="text-[#D4A373] font-mono font-medium" x-text="formatConvertedValue(calculateAccommodationTotal())"></span>
