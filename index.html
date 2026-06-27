@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tides Africa Safaris - Tailor-Made Itinerary Planner</title>
 
-    <!-- Google Fonts: Syne (Headings) + Plus Jakarta Sans (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght=700;800&family=Plus+Jakarta+Sans:wght=400;500;600&display=swap" rel="stylesheet" />
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- EmailJS -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <script>
@@ -46,6 +42,11 @@
             mix-blend-mode: luminosity;
             opacity: 0.15;
         }
+        /* Custom styling for date picker icon color */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(72%) sepia(17%) saturate(629%) hue-rotate(349deg) brightness(91%) contrast(85%);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-[#090D0A] text-[#E4EAE4] antialiased"
@@ -53,7 +54,7 @@
           duration: 5,
           selectedActivities: [],
           tier: 'midrange',
-          booking: { name: '', email: '', whatsapp: '', notes: '' },
+          booking: { name: '', email: '', whatsapp: '', arrivalDate: '', notes: '' },
           isSubmitted: false,
           loading: false,
           errorMessage: '',
@@ -61,16 +62,22 @@
           // Budget estimation matrix parameters
           baseRates: { luxury: 450, midrange: 250, budget: 150 },
           activityCosts: {
-              'gorilla': 800, // Permit inclusion
+              'gorilla': 800, 
               'chimp': 250,
               'game_drive': 75,
               'boat_cruise': 50
           },
 
+          calculateAccommodationTotal() {
+              return this.baseRates[this.tier] * this.duration;
+          },
+
+          calculateActivitiesTotal() {
+              return this.selectedActivities.reduce((sum, act) => sum + (this.activityCosts[act] || 0), 0);
+          },
+
           calculateEstimate() {
-              let perDayCost = this.baseRates[this.tier] * this.duration;
-              let activityTotal = this.selectedActivities.reduce((sum, act) => sum + (this.activityCosts[act] || 0), 0);
-              return perDayCost + activityTotal;
+              return this.calculateAccommodationTotal() + this.calculateActivitiesTotal();
           },
 
           toggleActivity(id) {
@@ -82,8 +89,8 @@
           },
 
           async handlePlannerSubmit() {
-              if (!this.booking.name.trim() || !this.booking.whatsapp.trim()) {
-                  this.errorMessage = 'Name and WhatsApp number are required.';
+              if (!this.booking.name.trim() || !this.booking.whatsapp.trim() || !this.booking.arrivalDate) {
+                  this.errorMessage = 'Name, WhatsApp number, and Estimated Arrival Date are required.';
                   return;
               }
               
@@ -92,14 +99,19 @@
 
               const activityLabels = this.selectedActivities.map(a => a.replace('_', ' ').toUpperCase()).join(', ') || 'General Sightseeing';
               const estimatedBudget = '$' + this.calculateEstimate();
+              const accommodationCostStr = '$' + this.calculateAccommodationTotal();
+              const activitiesCostStr = '$' + this.calculateActivitiesTotal();
 
               const templateParams = {
                   client_name: this.booking.name.trim(),
                   client_email: this.booking.email.trim() || 'Not provided',
                   client_phone: this.booking.whatsapp.trim(),
+                  arrival_date: this.booking.arrivalDate,
                   duration_days: this.duration,
                   selected_activities: activityLabels,
                   accommodation_tier: this.tier.toUpperCase(),
+                  accommodation_cost: accommodationCostStr,
+                  activities_cost: activitiesCostStr,
                   estimated_budget: estimatedBudget,
                   custom_notes: this.booking.notes.trim() || 'None'
               };
@@ -124,10 +136,11 @@
                   '🦁 *New Safari Inquiry - Tides Africa* 🌊',
                   '',
                   '👤 *Name:* ' + this.booking.name.trim(),
-                  '📅 *Duration:* ' + this.duration + ' Days',
-                  '🏨 *Tier:* ' + this.tier.toUpperCase(),
-                  '🏹 *Activities:* ' + activityLabels,
-                  '💰 *Est. Budget:* ' + estimatedBudget,
+                  '📅 *Est. Arrival:* ' + this.booking.arrivalDate,
+                  '⏱️ *Duration:* ' + this.duration + ' Days',
+                  '🏨 *Tier:* ' + this.tier.toUpperCase() + ' (' + accommodationCostStr + ')',
+                  '🏹 *Activities:* ' + activityLabels + ' (' + activitiesCostStr + ')',
+                  '💰 *Total Est. Budget:* ' + estimatedBudget,
                   '',
                   '💬 *Message:* ' + (this.booking.notes.trim() || 'Looking forward to planning!')
               ].join('\n');
@@ -139,13 +152,10 @@
           }
       }">
 
-    <!-- NAVIGATION HEADER -->
     <nav class="sticky top-0 z-50 bg-[#090D0A]/90 backdrop-blur-md border-b border-[#162018]">
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <!-- Custom Brand Logo Container -->
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-full bg-[#D4A373]/10 border border-[#D4A373]/30 flex items-center justify-center flex-shrink-0 text-[#D4A373]">
-                    <!-- Vector Wave/Tide Asset -->
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-8v12"/>
                     </svg>
@@ -158,12 +168,11 @@
 
             <div class="hidden sm:flex items-center gap-2 bg-[#111A13] border border-[#162018] rounded-full px-4 py-1.5 text-xs text-gray-400">
                 <span class="h-2 w-2 rounded-full bg-[#D4A373] animate-pulse"></span>
-                <span>Tailor-Made Planner v1.0</span>
+                <span>Tailor-Made Planner v1.1</span>
             </div>
         </div>
     </nav>
 
-    <!-- BANNER HERO ARCHITECTURE -->
     <div class="relative bg-[#111A13] overflow-hidden border-b border-[#162018] py-12 md:py-16">
         <div class="safari-bg"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#090D0A] via-[#090D0A]/40 to-transparent"></div>
@@ -179,13 +188,10 @@
         </div>
     </div>
 
-    <!-- MAIN ENGINE LAYOUT -->
     <main class="max-w-6xl mx-auto px-4 py-10">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- CONFIGURATION STEP FORM -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Step 1: Duration Selector -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="heading font-bold text-white text-sm uppercase tracking-wider text-[#D4A373]">1. Select Safari Duration</h3>
@@ -200,7 +206,6 @@
                     </div>
                 </div>
 
-                <!-- Step 2: Activity Matrix Selection -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6">
                     <h3 class="heading font-bold text-white text-sm uppercase tracking-wider text-[#D4A373] mb-4">2. Experience Checklist</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -211,7 +216,7 @@
                                 <span x-show="selectedActivities.includes('gorilla')" class="text-xs text-[#090D0A] font-bold">✓</span>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-white">Gorilla Trekking Permit</p>
+                                <p class="text-xs font-bold text-white">Gorilla Trekking Permit (+$800)</p>
                                 <p class="text-[11px] text-gray-400 mt-0.5">Bwindi Impenetrable Forest inclusions.</p>
                             </div>
                         </button>
@@ -223,7 +228,7 @@
                                 <span x-show="selectedActivities.includes('game_drive')" class="text-xs text-[#090D0A] font-bold">✓</span>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-white">Savannah Game Drives</p>
+                                <p class="text-xs font-bold text-white">Savannah Game Drives (+$75)</p>
                                 <p class="text-[11px] text-gray-400 mt-0.5">Queen Elizabeth & Murchison Falls vectors.</p>
                             </div>
                         </button>
@@ -235,7 +240,7 @@
                                 <span x-show="selectedActivities.includes('chimp')" class="text-xs text-[#090D0A] font-bold">✓</span>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-white">Chimpanzee Tracking</p>
+                                <p class="text-xs font-bold text-white">Chimpanzee Tracking (+$250)</p>
                                 <p class="text-[11px] text-gray-400 mt-0.5">Kibale Forest primate paths.</p>
                             </div>
                         </button>
@@ -247,42 +252,48 @@
                                 <span x-show="selectedActivities.includes('boat_cruise')" class="text-xs text-[#090D0A] font-bold">✓</span>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-white">Kazinga Channel Cruise</p>
+                                <p class="text-xs font-bold text-white">Kazinga Channel Cruise (+$50)</p>
                                 <p class="text-[11px] text-gray-400 mt-0.5">Aquatic wildlife stream view framing.</p>
                             </div>
                         </button>
                     </div>
                 </div>
 
-                <!-- Step 3: Accommodation Tier Configuration -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6">
                     <h3 class="heading font-bold text-white text-sm uppercase tracking-wider text-[#D4A373] mb-4">3. Accommodation Comfort Level</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button type="button" @click="tier = 'budget'"
                                 :class="tier === 'budget' ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
                                 class="p-4 rounded-xl border text-left transition-all">
-                            <p class="text-xs font-bold text-white block">Value Adventure</p>
+                            <div class="flex justify-between items-center">
+                                <p class="text-xs font-bold text-white">Value Adventure</p>
+                            </div>
+                            <span class="text-[10px] font-mono text-[#D4A373] mt-1 block">$150 / night</span>
                             <span class="text-[10px] text-gray-400 mt-1 block">Comfortable heritage camps.</span>
                         </button>
                         <button type="button" @click="tier = 'midrange'"
                                 :class="tier === 'midrange' ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
                                 class="p-4 rounded-xl border text-left transition-all">
-                            <p class="text-xs font-bold text-white block">Premium Midrange</p>
+                            <div class="flex justify-between items-center">
+                                <p class="text-xs font-bold text-white">Premium Midrange</p>
+                            </div>
+                            <span class="text-[10px] font-mono text-[#D4A373] mt-1 block">$250 / night</span>
                             <span class="text-[10px] text-gray-400 mt-1 block">Eco-lodges with dramatic vistas.</span>
                         </button>
                         <button type="button" @click="tier = 'luxury'"
                                 :class="tier === 'luxury' ? 'border-[#D4A373] bg-[#D4A373]/5' : 'border-[#162018] bg-[#090D0A]'"
                                 class="p-4 rounded-xl border text-left transition-all">
-                            <p class="text-xs font-bold text-white block">Elite Luxury</p>
-                            <span class="text-[10px] text-gray-400 mt-1 block">Exclusive ultra-luxury safari escapes.</span>
+                            <div class="flex justify-between items-center">
+                                <p class="text-xs font-bold text-white">Elite Luxury</p>
+                            </div>
+                            <span class="text-[10px] font-mono text-[#D4A373] mt-1 block">$450 / night</span>
+                            <span class="text-[10px] text-gray-400 mt-1 block">Exclusive ultra-luxury escapes.</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- SYNOPSIS AND LEAD CAPTURE SIDEBAR -->
             <div class="space-y-6">
-                <!-- Live Value Matrix Indicator -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6 relative overflow-hidden">
                     <div class="absolute top-0 right-0 bg-[#D4A373]/10 text-[#D4A373] text-[9px] tracking-widest uppercase font-bold px-3 py-1 rounded-bl-lg">
                         Estimation
@@ -293,16 +304,18 @@
                     <div class="border-t border-[#162018] pt-4 space-y-2 text-xs">
                         <div class="flex justify-between"><span class="text-gray-500">Duration Range</span><span class="text-white font-mono" x-text="duration + ' Days'"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Lodge Profile</span><span class="text-white uppercase font-mono" x-text="tier"></span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Activity Vectors</span><span class="text-white font-mono" x-text="selectedActivities.length"></span></div>
+                        
+                        <div class="flex justify-between border-t border-[#162018]/40 pt-2"><span class="text-gray-400">Lodging Subtotal:</span><span class="text-[#D4A373] font-mono" x-text="'$' + calculateAccommodationTotal()"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Experiences Total:</span><span class="text-[#D4A373] font-mono" x-text="'$' + calculateActivitiesTotal()"></span></div>
+                        
                         <div class="border-t border-[#162018] pt-3 flex justify-between items-baseline mt-4">
-                            <span class="text-xs text-gray-400">Estimated Core Total:</span>
+                            <span class="text-xs text-white font-medium">Estimated Core Total:</span>
                             <span class="text-2xl font-black text-[#D4A373] font-mono" x-text="'$' + calculateEstimate()"></span>
                         </div>
                         <p class="text-[9px] text-gray-500 italic mt-1 text-right">*Excludes international flight lines.</p>
                     </div>
                 </div>
 
-                <!-- Submission Pipeline Card -->
                 <div class="bg-[#111A13] border border-[#162018] rounded-2xl p-6">
                     <h3 class="heading text-white font-bold text-sm uppercase tracking-wider mb-3">Request Custom Quote</h3>
                     
@@ -320,8 +333,14 @@
                         </div>
 
                         <div>
+                            <label for="arrival_date" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Estimated Arrival Date</label>
+                            <input type="date" id="arrival_date" name="arrival_date" required x-model="booking.arrivalDate"
+                                   class="w-full bg-[#090D0A] border border-[#162018] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#D4A373]" />
+                        </div>
+
+                        <div>
                             <label for="client_notes" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Custom Directives (Optional)</label>
-                            <textarea id="client_notes" name="client_notes" x-model="booking.notes" rows="2" placeholder="Dietary adjustments, specific dates, or traveling with kids..."
+                            <textarea id="client_notes" name="client_notes" x-model="booking.notes" rows="2" placeholder="Dietary adjustments, tracking priorities..."
                                       class="w-full bg-[#090D0A] border border-[#162018] rounded-xl p-3 text-xs text-white placeholder-gray-700 focus:outline-none focus:border-[#D4A373] resize-none"></textarea>
                         </div>
 
@@ -340,14 +359,13 @@
                         </button>
                     </form>
 
-                    <!-- Verification State Screen -->
                     <div x-show="isSubmitted" class="text-center py-6" x-cloak>
                         <div class="h-10 w-10 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">✓</div>
                         <h4 class="heading text-white font-bold text-sm">Parameters Synced Perfectly</h4>
                         <p class="text-xs text-gray-400 mt-2 px-2">
                             Your itinerary parameters have been captured. A dedicated African itinerary specialist is picking up your record via the WhatsApp line link.
                         </p>
-                        <button @click="isSubmitted = false; booking = { name: '', email: '', whatsapp: '', notes: '' }; selectedActivities = [];"
+                        <button @click="isSubmitted = false; booking = { name: '', email: '', whatsapp: '', arrivalDate: '', notes: '' }; selectedActivities = [];"
                                 class="mt-4 text-[10px] uppercase font-bold tracking-widest text-[#D4A373] hover:text-white transition">
                             Map New Safari File
                         </button>
